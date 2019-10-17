@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html>
+	<meta charset="UTF-8"> 
+	<head>
+		<link rel="icon" href="favicon.ico" type="image/gif" sizes="16x16">
+		<title>InRows</title>
+		<link rel="stylesheet" id="css" href="style.css">
+		<link href="https://fonts.googleapis.com/css?family=Ubuntu+Mono&display=swap" rel="stylesheet">
+		<script>
+			var v = [];
+			var n = 0;
+			var m = 0;
+			var tr = 0;
+			var pl = 0;
+			var ply = 0;
+			var scr = [0, 0, 0];
+			var lc = 0;
+			var ll = 0;
+			var und = 0;
+			var csn = 0;
+			var csm = 0;
+			var csp = 0;
+			var pcs = 0;
+			var lstl = 8;
+			var lst1 = 0;
+			var lst2 = 0;
+			var lst = [0, 0, 0, 0, 0];
+			var pln = [0, "Player One", "Player Two"];
+			var cls = [0, "#306acf", "#DC143C", "#17b517", "#b5b517", "#17b5b5", "#7B68EE", "#DB7093", "#f29340", "#b57617"];
+			var clsav = [0, 1, 1, 0, 0, 0, 0, 0, 0, 0];
+			var cl1 = 1;
+			var cl2 = 2;
+			var clnr = 10;
+			var plset = 0;
+			var ordx = [0], ordy = [0], ordt = 0;
+			var tme = 0, tmec = 0;;
+			var lstw = 0;
+			var grav = 0, gv = [];
+			function initlst() {
+				lst1 = 0;
+				lst2 = 0;
+				for (i = 0; i <= 5; ++i) {
+					lst[i] = [];
+					for (j = 0; j <= lstl + 5; ++j) {
+						lst[i][j] = 0;
+					}
+				}
+			}
+			initlst();
+			function updatelst() {
+				document.getElementById("lst1").innerHTML = "";
+				document.getElementById("lst2").innerHTML = "";
+				if (lst1 > 0) {
+					document.getElementById("lst1").innerHTML = "<p><b>Row: " + lst[1][1] + " | Column: " + lst[2][1] + "</b></p>";
+					for (i = 2; i <= lst1; ++i) {
+						document.getElementById("lst1").innerHTML += "<p>Row: " + lst[1][i] + " | Column: " + lst[2][i] + "</p>";
+					}
+				}
+				if (lst2 > 0) {
+					document.getElementById("lst2").innerHTML = "<p><b>Row: " + lst[3][1] + " | Column: " + lst[4][1] + "</b></p>";
+					for (i = 2; i <= lst2; ++i) {
+						document.getElementById("lst2").innerHTML += "<p>Row: " + lst[3][i] + " | Column: " + lst[4][i] + "</p>";
+					}
+				}
+			}
+			function init() {
+				for (i = 0; i <= 25; ++i) {
+					v[i] = [];
+					gv[i] = 0;
+					for (j = 0; j <= 25; ++j) {
+						v[i][j] = 3;
+					}
+				}
+			}
+			function gtmec() {
+				tmec = new Date().getTime() / 1000;
+				tmec = tmec - tme;
+				tmec = tmec * 10;
+				tmec = Math.floor(tmec);
+			}
+			function showstats(x1) {
+				lstw = x1;
+				if (x1 == 1) {
+					var winn = pln[1] + " Won!";
+				}
+				else if (x1 == 2) {
+					var winn = pln[2] + " Won!";
+				}
+				else {
+					var winn = "Draw!";
+				}
+				var proc = ordt * 100 / (n * m);
+				var procin = proc;
+				proc *= 10;
+				proc = Math.floor(proc);
+				proc /= 10;
+				document.getElementById("desc").innerHTML = winn + " Game ended in " + tmec / 10 + " seconds.";
+				document.getElementById("desc").innerHTML += " You used " + ordt + " squares (";
+				if (proc != procin) {
+					document.getElementById("desc").innerHTML += "&#x2248 ";
+				}
+				document.getElementById("desc").innerHTML += proc + "%) from a total of " + n * m + ".";
+			}
+			function check(x, y) {
+				var d1 = [0, 0, -1, -1, -1];
+				var d2 = [0, -1, -1, 0, 1];
+				ll = x;
+				lc = y;
+				und = 1;
+				checkund();
+				for (k = 1; k <= 4; ++k) {
+					var c = 0;
+					var a = x; var b = y;
+					while (v[a][b] == pl) {
+						c++;
+						a += d1[k];
+						b += d2[k];
+					}
+					var a = x; var b = y;
+					while (v[a][b] == pl) {
+						c++;
+						a -= d1[k];
+						b -= d2[k];
+					}
+					c--;
+					if (c >= tr) {
+						if (pl == 0) {
+							document.getElementById("p1").innerHTML = "You Won";
+							document.getElementById("p2").innerHTML = "You Lost";
+							gtmec();
+							showstats(1);
+						}
+						else {
+							document.getElementById("p1").innerHTML = "You Lost";
+							document.getElementById("p2").innerHTML = "You Won";
+							gtmec();
+							showstats(2);
+						}
+						scr[pl + 1]++;
+						ply = 0;
+						k = 5;
+						und = 0;
+						checkund();
+						updatescr();
+						showord();
+					}
+				}
+				if (ply == 1) {
+					pl++;
+					pl %= 2;
+					checkpick();
+					if (pcs == n * m) {
+						und = 0;
+						ply = 0;
+						checkund();
+						document.getElementById("p1").innerHTML = "Draw";
+						document.getElementById("p2").innerHTML = "Draw";
+						gtmec();
+						showstats(3);
+						showord();
+					}
+				}
+			}
+			function showord() {
+				for (i = 1; i <= ordt; ++i) {
+					document.getElementById("d" + ordx[i] + "_" + ordy[i]).innerHTML = "<span class='ord'><b>" + i + "</b></span>";
+				}
+			}
+			function showlast() {
+				if (ordt >= 2) {
+					document.getElementById("d" + ordx[ordt - 1] + "_" + ordy[ordt - 1]).innerHTML = "";
+				}
+				document.getElementById("d" + ordx[ordt] + "_" + ordy[ordt]).innerHTML = "<span class='ord'><b>L</b></span>"
+			}
+			function chg(i, j) {
+				if (ply == 1) {
+					if (tme == 0) {
+						tme = new Date().getTime() / 1000;
+					}
+					if (grav == 1) {
+						i = n - gv[j];
+						gv[j]++;
+					}
+					ordt++;
+					ordx[ordt] = i;
+					ordy[ordt] = j;
+					v[i][j] = pl;
+					if (pl == 0) {
+						lst1++;
+						if (lst1 > lstl) {
+							lst1 = lstl;
+						}
+						for (k = lst1; k >= 1; --k) {
+							lst[1][k + 1] = lst[1][k];
+							lst[2][k + 1] = lst[2][k];
+						}
+						lst[1][1] = i;
+						lst[2][1] = j;
+					}
+					if (pl == 1) {
+						lst2++;
+						if (lst2 > lstl) {
+							lst2 = lstl;
+						}
+						for (k = lst2; k >= 1; --k) {
+							lst[3][k + 1] = lst[3][k];
+							lst[4][k + 1] = lst[4][k];
+						}
+						lst[3][1] = i;
+						lst[4][1] = j;
+					}
+					updatelst();
+					if (pl == 0) {
+						document.getElementById(i + "_" + j).innerHTML = "<div id='d" + i + "_" + j + "' class='block' style=background-color:" + cls[cl1] + ";></div>";
+					}
+					else {
+						document.getElementById(i + "_" + j).innerHTML = "<div id='d" + i + "_" + j + "' class='block' style=background-color:" + cls[cl2] + ";></div>";
+					}
+					pcs++;
+					showlast();
+					check(i, j);
+				}
+			}
+			function updatescr() {
+				document.getElementById("score1").innerHTML = scr[1];
+				document.getElementById("score2").innerHTML = scr[2];
+			}
+			function border() {
+				for (i = 0; i <= n + 1; ++i) {
+					v[i][0] = 4;
+					v[i][m + 1] = 4;
+				}
+				for (j = 0; j <= m + 1; ++j) {
+					v[0][i] = 4;
+					v[n + 1][i] = 4;
+				}
+			}
+			function resetsc() {
+				scr[1] = 0;
+				scr[2] = 0;
+				updatescr();
+			}
+			function checkpick() {
+				if (pl == 0) {
+					document.getElementById("p1").innerHTML = "Your Turn";
+					document.getElementById("p2").innerHTML = "Opponent's Turn";
+				}
+				else {
+					document.getElementById("p1").innerHTML = "Opponent's Turn";
+					document.getElementById("p2").innerHTML = "Your Turn";
+				}
+			}
+			function checkund() {
+				if (und == 0) {
+					document.getElementById("undo").innerHTML = "<button class='done a' onclick='undo()'>Undo</button>";
+				}
+				else {
+					document.getElementById("undo").innerHTML = "<button class='a' onclick='undo()'>Undo</button>";
+				}
+			}
+			function gravt() {
+				grav++;
+				grav %= 2;
+				start();
+				gravop();
+				checkgrav();
+				
+			}
+			function checkgrav() {
+				if (grav == 0) {
+					document.getElementById("bgrav").innerHTML = '<button class="a" onclick="gravop()">Gravity</button>';
+				}
+				else {
+					document.getElementById("bgrav").innerHTML = '<button class="done a" onclick="gravop()">Gravity</button>';
+				}
+			}
+			function gravop() {
+				document.getElementById("customdim").innerHTML = "Gravity makes the pieces fall when placed. Changing it starts a new game. Gravity: ";
+				if (grav == 0) {
+					document.getElementById("customdim").innerHTML += "Off";
+				}
+				else {
+					document.getElementById("customdim").innerHTML += "On";
+				}
+				document.getElementById("customdim").innerHTML += ". <button class='b' onclick='gravt()'>Toggle</button> <button class='b' onclick='clsset()'>Close</button>";
+			}
+				
+			function start() {
+				ordt = 0;
+				tme = 0;
+				document.getElementById("pz").style.display = "table-cell";
+				document.getElementById("control").innerHTML = '<p><button class="a" onclick="start()">New Game</button> <button class="a" onclick="resetsc()">Reset Scores</button> <span id="undo"><button class="a" onclick="undo()">Undo</button></span> <span id="bgrav"><button class="a" onclick="gravop()">Gravity</button></span></p>';
+				document.getElementById("pz").innerHTML = "";
+				showdesc();
+				document.getElementById("lineuppc").innerHTML = "(" + tr + ")";
+				clsset();
+				updatescr();
+				init();
+				initlst();
+				border();
+				pl = 0;
+				checkpick();
+				ply = 1;
+				und = 0;
+				pcs = 0;
+				checkund();
+				initlst();
+				updatelst();
+				checkgrav();
+				var txt = "";
+				for (i = 1; i <= n; ++i) {
+					for (j = 1; j <= m; ++j) {
+						txt += "<span id=" + i + "_" + j + "><div id='d" + i + "_" + j + "' class='block z' onclick=chg(" + i + "," + j +")></div></span>";
+					}
+					txt += "<br>";
+				}
+				document.getElementById("pz").innerHTML = txt;
+			}
+			function undo() {
+				if (und == 1) {
+					ordt--;
+					v[ll][lc] = 3;
+					gv[lc]--;
+					pcs--;
+					pl++;
+					pl %= 2;
+					if (pl == 0) {
+						for (i = 1; i <= lst1; ++i) {
+							lst[1][i] = lst[1][i + 1];
+							lst[2][i] = lst[2][i + 1];
+						}
+						if (lst1 < lstl) {
+							lst1--;
+						}
+					}
+					if (pl == 1) {
+						for (i = 1; i <= lst2; ++i) {
+							lst[3][i] = lst[3][i + 1];
+							lst[4][i] = lst[4][i + 1];
+						}
+						if (lst2 < lstl) {
+							lst2--;
+						}
+					}
+					updatelst();
+					und = 0;
+					checkund();
+					document.getElementById(ll + "_" + lc).innerHTML = "<div id='d" + i + "_" + j + "' class='block z' onclick=chg(" + ll + "," + lc +")></div>";
+					checkpick();
+					showlast();
+				}
+			}
+			function tictactoe() {
+				n = 3;
+				m = 3;
+				tr = 3;
+				grav = 0;
+				start();
+			}
+			function gomoku() {
+				n = 15;
+				m = 15;
+				tr = 5;
+				grav = 0;
+				start();
+			}
+			function connectf() {
+				n = 6;
+				m = 7;
+				tr = 4;
+				grav = 1;
+				start();
+				checkgrav();
+			}
+			function customn() {
+				csn = document.getElementById("selectn").value;
+			}
+			function customm() {
+				csm = document.getElementById("selectm").value;
+			}
+			function customp() {
+				csp = document.getElementById("selectp").value;
+			}
+			function submitcst() {
+				var minn = 0;
+				csn = parseInt(csn);
+				csm = parseInt(csm);
+				csp = parseInt(csp);
+				if (csn > csm) {
+					minn = csn;
+				}
+				else {
+					minn = csm;
+				}
+				if (csp > minn) {
+					document.getElementById("customerr").innerHTML = " ERROR!";
+				}
+				else {
+					n = csn;
+					m = csm;
+					tr = csp;
+					start();
+				}
+			}
+			function customset() {
+				clsset();
+				csn = 3;
+				csm = 3;
+				csp = 3;
+				document.getElementById("customdim").innerHTML = "Choose the custom settings. Number of pieces: <select id='selectp' class='b' onchange='customp()'><option value=3>3</option><option value=4>4</option><option value=5>5</option><option value=6>6</option></select> Rows: <select id='selectn' class='b' onchange='customn()'><option value=3>3</option><option value=4>4</option><option value=5>5</option><option value=6>6</option><option value=7>7</option><option value=8>8</option><option value=9>9</option><option value=10>10</option><option value=11>11</option><option value=12>12</option><option value=13>13</option><option value=14>14</option><option value=15>15</option></select> Columns: <select id='selectm' class='b' onchange='customm()'><option value=3>3</option><option value=4>4</option><option value=5>5</option><option value=6>6</option><option value=7>7</option><option value=8>8</option><option value=9>9</option><option value=10>10</option><option value=11>11</option><option value=12>12</option><option value=13>13</option><option value=14>14</option><option value=15>15</option></select> <button id='submitcst' class='b' onclick='submitcst()'>Submit</button>";
+			}
+			function clsset() {
+				document.getElementById("customdim").innerHTML = "Good Luck, Have Fun!";
+				document.getElementById("customcol").innerHTML = "";
+				document.getElementById("custombt").innerHTML = "";
+				document.getElementById("customerr").innerHTML = "";
+			}
+			function chgnm(plr2) {
+				var name = document.getElementById("pln").value;
+				var checkname = 0;
+				for (i = 0; i < name.length; ++i) {
+					if (name[i] != ' ') {
+						checkname = 1;
+						i = name.length + 5;
+					}
+				}
+				if (checkname == 1) {
+					pln[plr2] = name;
+					document.getElementById("pl1n").innerHTML = pln[1];
+					document.getElementById("pl2n").innerHTML = pln[2];
+					document.getElementById("plnmchg").innerHTML = pln[plr2];
+					document.getElementById("customerr").innerHTML = "";
+				}
+				else {
+					document.getElementById("customerr").innerHTML = "ERROR";
+				}
+				if (ply == 0 && n != 0) {
+					showstats(lstw);
+				}
+			}
+			function chgcol(plr2, cltg) {
+				var clt = cltg;
+				if (plr2 == 1) {
+					clsav[cl1] = 0;
+					cl1 = clt;
+				}
+				else {
+					clsav[cl2] = 0;
+					cl2 = clt;
+				}
+				clsav[clt] = 1;
+				document.getElementById("color" + plr2).style.backgroundColor = cls[clt];
+				for (i = 1; i <= n; ++i) {
+					for (j = 1; j <= m; ++j) {
+						if (v[i][j] == plr2 - 1) {
+							document.getElementById(i + "_" + j).innerHTML = "<div id='d" + i + "_" + j + "' class='block' style='background-color:" + cls[clt] + ";'></div>";
+						}
+					}
+				}
+				showcols();
+				document.getElementById("customerr").innerHTML = "";
+				if (ply == 0) {
+					showord();
+				}
+				else {
+					showlast();
+				}
+			}
+			function showcols() {
+				document.getElementById("customcol").innerHTML = "";
+				for (i = 1; i <= clnr; ++i) {
+					if (clsav[i] == 0) {
+						document.getElementById("customcol").innerHTML += "<button class='c' style='background-color:" + cls[i] + "; color:" + cls[i] + ";' onclick='chgcol(" + plset + "," + i + ")'>.</button> ";
+					}
+				}
+				document.getElementById("customcol").innerHTML += " ";
+			}
+			function settings(plr) {
+				plset = plr;
+				clsset();
+				var namechange = "<input class='b' id='pln' maxlength='16'> ";
+				document.getElementById("customdim").innerHTML = "<span id='plnmchg'>" + pln[plr] + "</span>'s settings. Name: " + namechange + "<button class='b' onclick='chgnm(" + plr + ")'>Change</button> | Color: ";
+				showcols();
+				document.getElementById("custombt").innerHTML += " <button class='b' onclick='clsset()'>Close</button> ";
+			}
+			function showdesc() {
+				document.getElementById("desc").innerHTML = "<b>How to play:</b> Click on a free square when it is your turn to place a piece inside it. Line up the selected number of pieces <span id='lineuppc'></span> to win. Click on a player's name to change its settings.";
+			}
+		</script>
+	</head>
+	<body>
+		<center>
+			<div class="game_zone">
+				<div style="display: flex;">
+					<div>
+						<div id="prof1" class="profile">
+							<div class="proftitle">
+								<p id="pl1n" onclick="settings(1)">Player One</p>
+							</div>
+							<div id="color1" class="color" style="background-color:#306acf;">
+								<span>Color</span>
+							</div>
+							<div class="score">
+								<span>Score: <span id="score1">-</span></span>
+							</div>
+							<div id="p1" class="picks">
+							</div>
+						</div>
+						<br>
+						<div id="picks1" class="profile">
+							<div class="lastpickstitle">
+								<span>Last Picks</span>
+							</div>
+							<div id="lst1" class="lastpicks">
+								
+							</div>
+						</div>
+					</div>
+
+					<div class="gsquare" style="flex: 1;justify-content: center;">
+    					<div class="outborder" id="pz" style="display: none; margin-top: auto; margin-bottom: auto">
+						</div>
+					</div>
+
+					<div>
+						<div id="prof2" class="profile">
+							<div class="proftitle">
+								<p id="pl2n" onclick="settings(2)">Player Two</p>
+							</div>
+							<div id="color2" class="color" style="background-color:#DC143C;">
+								<span>Color</span>
+							</div>
+							<div class="score">
+								Score: <span id="score2">-</span>
+							</div>
+							<div id="p2" class="picks">
+							</div>
+						</div>
+						<br>
+						<div id="picks2" class="profile">
+							<div class="lastpickstitle">
+								<span>Last Picks</span>
+							</div>
+							<div id="lst2" class="lastpicks">
+							
+							</div>
+						</div>
+					</div>
+				</div>
+				<div style="clear:both;">
+					<p id="desc" style="height:40px; width:900px;"><b>How to play:</b> Click on a free square when it is your turn to place a piece inside it. Line up the selected number of pieces <span id="lineuppc"></span> to win. Click on a player's name to change its settings.</p>
+					<p style="height:30px;" id="control">Choose the game settings</p>
+					<div></p><button class='a' id="ticttactoe" onclick=tictactoe()>Tic-Tac-Toe</button> <button class='a' id="gomoku" onclick=gomoku()>Gomoku</button> <button class='a' id="connectf" onclick=connectf()>Connect Four</button> <button class='a' id="customset" onclick=customset()>Custom</button></p></div>
+					<div style="height:15px;" id="custom_zone"><span id="customdim">Good Luck, Have Fun!</span><span id="customcol"></span><span id="custombt"></span><span id="customerr" class="customerr"></span></div>
+					<div id="credits" class="credits">
+						<h4><a class="credits" href="https://github.com/tudortarniceru/inrows">GitHub Repository</h4>
+					</div>
+				</div>
+			</div>
+		</center>
+	</body>
+</html>
